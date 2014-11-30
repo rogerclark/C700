@@ -293,6 +293,10 @@
 		F5710732162EB3D40043EF00 /* PGChunk.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F5710730162EB3D40043EF00 /* PGChunk.cpp */; };
 		F57D96C61984D1E900F2FE06 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F57D96C51984D1E900F2FE06 /* Carbon.framework */; };
 		F57D96C71984D1E900F2FE06 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F57D96C51984D1E900F2FE06 /* Carbon.framework */; };
+		F58DCD7E1A2B4586004BD426 /* C700DSP.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F58DCD7C1A2B4586004BD426 /* C700DSP.cpp */; };
+		F58DCD7F1A2B4586004BD426 /* C700DSP.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F58DCD7C1A2B4586004BD426 /* C700DSP.cpp */; };
+		F58DCD801A2B4586004BD426 /* C700DSP.h in Headers */ = {isa = PBXBuildFile; fileRef = F58DCD7D1A2B4586004BD426 /* C700DSP.h */; };
+		F58DCD811A2B4586004BD426 /* C700DSP.h in Headers */ = {isa = PBXBuildFile; fileRef = F58DCD7D1A2B4586004BD426 /* C700DSP.h */; };
 		F597AD36160B67860003E710 /* cocoasupport.mm in Sources */ = {isa = PBXBuildFile; fileRef = F597AD28160B67860003E710 /* cocoasupport.mm */; };
 		F597AD37160B67860003E710 /* getpluginbundle.h in Headers */ = {isa = PBXBuildFile; fileRef = F597AD29160B67860003E710 /* getpluginbundle.h */; };
 		F597AD38160B67860003E710 /* plugguieditor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F597AD2A160B67860003E710 /* plugguieditor.cpp */; };
@@ -499,6 +503,8 @@
 		F571072F162EB3D40043EF00 /* PGChunk.h */ = {isa = PBXFileReference; fileEncoding = 2147483649; lastKnownFileType = sourcecode.c.h; path = PGChunk.h; sourceTree = "<group>"; };
 		F5710730162EB3D40043EF00 /* PGChunk.cpp */ = {isa = PBXFileReference; fileEncoding = 2147483649; lastKnownFileType = sourcecode.cpp.cpp; path = PGChunk.cpp; sourceTree = "<group>"; };
 		F57D96C51984D1E900F2FE06 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
+		F58DCD7C1A2B4586004BD426 /* C700DSP.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = C700DSP.cpp; sourceTree = "<group>"; };
+		F58DCD7D1A2B4586004BD426 /* C700DSP.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = C700DSP.h; sourceTree = "<group>"; };
 		F597AD28160B67860003E710 /* cocoasupport.mm */ = {isa = PBXFileReference; fileEncoding = 2147483649; lastKnownFileType = sourcecode.cpp.objcpp; name = cocoasupport.mm; path = vstgui_diff/cocoasupport.mm; sourceTree = SOURCE_ROOT; };
 		F597AD29160B67860003E710 /* getpluginbundle.h */ = {isa = PBXFileReference; fileEncoding = 2147483649; lastKnownFileType = sourcecode.c.h; name = getpluginbundle.h; path = vstgui_diff/getpluginbundle.h; sourceTree = SOURCE_ROOT; };
 		F597AD2A160B67860003E710 /* plugguieditor.cpp */ = {isa = PBXFileReference; fileEncoding = 2147483649; lastKnownFileType = sourcecode.cpp.cpp; name = plugguieditor.cpp; path = vstgui_diff/plugguieditor.cpp; sourceTree = SOURCE_ROOT; };
@@ -805,6 +811,8 @@
 				F5432C251627AE4200863A0B /* EchoKernel.cpp */,
 				F556802B1A2AA8550031451C /* DynamicVoiceManager.cpp */,
 				F556802C1A2AA8550031451C /* DynamicVoiceManager.h */,
+				F58DCD7C1A2B4586004BD426 /* C700DSP.cpp */,
+				F58DCD7D1A2B4586004BD426 /* C700DSP.h */,
 				F543D0AB147D285F00DC53A3 /* C700Generator.h */,
 				F543D0AA147D285F00DC53A3 /* C700Generator.cpp */,
 				8AD362300AFE59F900FC48D2 /* brrcodec.h */,
@@ -993,6 +1001,7 @@
 				F5432C261627AE4200863A0B /* EchoKernel.h in Headers */,
 				F5432F311628117D00863A0B /* C700Kernel.h in Headers */,
 				F5432FF3162915F900863A0B /* C700Parameters.h in Headers */,
+				F58DCD801A2B4586004BD426 /* C700DSP.h in Headers */,
 				F510B706163266CB00A844B4 /* FileAccess.h in Headers */,
 				F5C1B32316F803A10034F320 /* ControlInstacnesDefs.h in Headers */,
 				F556802F1A2AA8550031451C /* DynamicVoiceManager.h in Headers */,
@@ -1003,6 +1012,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F58DCD811A2B4586004BD426 /* C700DSP.h in Headers */,
 				F557ACE819CD159300CF9792 /* MersenneTwister.h in Headers */,
 				F543317916296E0200863A0B /* C700_Prefix.pch in Headers */,
 				F543319716296E0200863A0B /* C700defines.h in Headers */,
@@ -1328,6 +1338,7 @@
 				F556802D1A2AA8550031451C /* DynamicVoiceManager.cpp in Sources */,
 				F569AAA5161C0114006C91AD /* LabelOnOffButton.cpp in Sources */,
 				F569AD37161D3490006C91AD /* WaveView.cpp in Sources */,
+				F58DCD7E1A2B4586004BD426 /* C700DSP.cpp in Sources */,
 				F55D63DB161D6FFE001CF9AB /* DummyCntl.cpp in Sources */,
 				F55D65BF161EC9D0001CF9AB /* SeparatorLine.cpp in Sources */,
 				F55D6603161ECFD1001CF9AB /* MyParamDisplay.cpp in Sources */,
@@ -1381,6 +1392,7 @@
 				F543321716296E0200863A0B /* PlistBRRFile.cpp in Sources */,
 				F543321816296E0200863A0B /* EchoKernel.cpp in Sources */,
 				F53602B51984CF7D0079A9BE /* audioeffect.cpp in Sources */,
+				F58DCD7F1A2B4586004BD426 /* C700DSP.cpp in Sources */,
 				F543321916296E0200863A0B /* C700Kernel.cpp in Sources */,
 				F543321A16296E0200863A0B /* C700Parameters.cpp in Sources */,
 				F54338C41629749600863A0B /* aeffguieditor.cpp in Sources */,
