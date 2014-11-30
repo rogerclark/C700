@@ -209,6 +209,10 @@
 		F54338DB1629759600863A0B /* C700VST.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F54338D91629759600863A0B /* C700VST.cpp */; };
 		F543D0AC147D285F00DC53A3 /* C700Generator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F543D0AA147D285F00DC53A3 /* C700Generator.cpp */; };
 		F543D0AD147D285F00DC53A3 /* C700Generator.h in Headers */ = {isa = PBXBuildFile; fileRef = F543D0AB147D285F00DC53A3 /* C700Generator.h */; };
+		F556802D1A2AA8550031451C /* DynamicVoiceManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F556802B1A2AA8550031451C /* DynamicVoiceManager.cpp */; };
+		F556802E1A2AA8550031451C /* DynamicVoiceManager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F556802B1A2AA8550031451C /* DynamicVoiceManager.cpp */; };
+		F556802F1A2AA8550031451C /* DynamicVoiceManager.h in Headers */ = {isa = PBXBuildFile; fileRef = F556802C1A2AA8550031451C /* DynamicVoiceManager.h */; };
+		F55680301A2AA8550031451C /* DynamicVoiceManager.h in Headers */ = {isa = PBXBuildFile; fileRef = F556802C1A2AA8550031451C /* DynamicVoiceManager.h */; };
 		F557ACE719CD159300CF9792 /* MersenneTwister.h in Headers */ = {isa = PBXBuildFile; fileRef = F557ACE619CD159300CF9792 /* MersenneTwister.h */; };
 		F557ACE819CD159300CF9792 /* MersenneTwister.h in Headers */ = {isa = PBXBuildFile; fileRef = F557ACE619CD159300CF9792 /* MersenneTwister.h */; };
 		F55D63DA161D6FFE001CF9AB /* DummyCntl.h in Headers */ = {isa = PBXBuildFile; fileRef = F55D63D8161D6FFE001CF9AB /* DummyCntl.h */; };
@@ -415,6 +419,8 @@
 		F54338D91629759600863A0B /* C700VST.cpp */ = {isa = PBXFileReference; fileEncoding = 2147483649; lastKnownFileType = sourcecode.cpp.cpp; path = C700VST.cpp; sourceTree = "<group>"; };
 		F543D0AA147D285F00DC53A3 /* C700Generator.cpp */ = {isa = PBXFileReference; fileEncoding = 2147483649; lastKnownFileType = sourcecode.cpp.cpp; path = C700Generator.cpp; sourceTree = "<group>"; };
 		F543D0AB147D285F00DC53A3 /* C700Generator.h */ = {isa = PBXFileReference; fileEncoding = 2147483649; lastKnownFileType = sourcecode.c.h; path = C700Generator.h; sourceTree = "<group>"; };
+		F556802B1A2AA8550031451C /* DynamicVoiceManager.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DynamicVoiceManager.cpp; sourceTree = "<group>"; };
+		F556802C1A2AA8550031451C /* DynamicVoiceManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DynamicVoiceManager.h; sourceTree = "<group>"; };
 		F557ACE619CD159300CF9792 /* MersenneTwister.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MersenneTwister.h; sourceTree = "<group>"; };
 		F55D63D8161D6FFE001CF9AB /* DummyCntl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DummyCntl.h; sourceTree = "<group>"; };
 		F55D63D9161D6FFE001CF9AB /* DummyCntl.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = DummyCntl.cpp; sourceTree = "<group>"; };
@@ -797,6 +803,8 @@
 				F5432FF0162915F900863A0B /* C700Parameters.cpp */,
 				F5432C241627AE4200863A0B /* EchoKernel.h */,
 				F5432C251627AE4200863A0B /* EchoKernel.cpp */,
+				F556802B1A2AA8550031451C /* DynamicVoiceManager.cpp */,
+				F556802C1A2AA8550031451C /* DynamicVoiceManager.h */,
 				F543D0AB147D285F00DC53A3 /* C700Generator.h */,
 				F543D0AA147D285F00DC53A3 /* C700Generator.cpp */,
 				8AD362300AFE59F900FC48D2 /* brrcodec.h */,
@@ -987,6 +995,7 @@
 				F5432FF3162915F900863A0B /* C700Parameters.h in Headers */,
 				F510B706163266CB00A844B4 /* FileAccess.h in Headers */,
 				F5C1B32316F803A10034F320 /* ControlInstacnesDefs.h in Headers */,
+				F556802F1A2AA8550031451C /* DynamicVoiceManager.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1015,6 +1024,7 @@
 				F54331A916296E0200863A0B /* MyKnob.h in Headers */,
 				F54331AA16296E0200863A0B /* MySlider.h in Headers */,
 				F54331AB16296E0200863A0B /* LabelOnOffButton.h in Headers */,
+				F55680301A2AA8550031451C /* DynamicVoiceManager.h in Headers */,
 				F54331AC16296E0200863A0B /* WaveView.h in Headers */,
 				F53602A91984CF600079A9BE /* aeffectx.h in Headers */,
 				F54331AD16296E0200863A0B /* DummyCntl.h in Headers */,
@@ -1315,6 +1325,7 @@
 				F569A8031619DEA6006C91AD /* ctooltipsupport.cpp in Sources */,
 				F569A950161AB0F1006C91AD /* MyKnob.cpp in Sources */,
 				F569AA27161AD9F4006C91AD /* MySlider.cpp in Sources */,
+				F556802D1A2AA8550031451C /* DynamicVoiceManager.cpp in Sources */,
 				F569AAA5161C0114006C91AD /* LabelOnOffButton.cpp in Sources */,
 				F569AD37161D3490006C91AD /* WaveView.cpp in Sources */,
 				F55D63DB161D6FFE001CF9AB /* DummyCntl.cpp in Sources */,
@@ -1346,6 +1357,7 @@
 				F543320116296E0200863A0B /* cvstguitimer.cpp in Sources */,
 				F543320216296E0200863A0B /* cfileselector.cpp in Sources */,
 				F543320316296E0200863A0B /* vstcontrols.cpp in Sources */,
+				F556802E1A2AA8550031451C /* DynamicVoiceManager.cpp in Sources */,
 				F543320416296E0200863A0B /* vstgui.cpp in Sources */,
 				F543320616296E0200863A0B /* C700Edit.cpp in Sources */,
 				F543320716296E0200863A0B /* C700GUI.cpp in Sources */,
@@ -1499,6 +1511,7 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 				CLANG_LINK_OBJC_RUNTIME = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_VERSION = "";
@@ -1520,6 +1533,7 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				CLANG_LINK_OBJC_RUNTIME = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_ENABLE_CPP_EXCEPTIONS = YES;
 				GCC_VERSION = "";
 				GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS = NO;

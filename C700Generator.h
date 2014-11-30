@@ -11,7 +11,7 @@
 
 #include "C700defines.h"
 #include "EchoKernel.h"
-#include <list>
+#include "DynamicVoiceManager.h"
 
 //-----------------------------------------------------------------------------
 typedef enum
@@ -48,12 +48,6 @@ public:
         float       portaStartPitch;
         int         lastNote;
         bool        damper;
-        //bool        monoMode;
-        
-        //int         priority;
-        int         limit;
-        int         noteOns;
-        //int         releasePriority;
         
         unsigned int changeFlg;
         InstParams  changedVP;
@@ -137,7 +131,7 @@ public:
     }
     
     double      GetProcessDelayTime();
-    int         GetNoteOnNotes(int ch) { return mChStat[ch].noteOns; }
+    int         GetNoteOnNotes(int ch) { return mDVoice.GetNoteOns(ch); }
 	
 	void		RefreshKeyMap(void);
 	
@@ -169,12 +163,6 @@ private:
 	} MIDIEvt;
 	
 	struct VoiceState {
-		int				midi_ch;
-        int             priority;
-		unsigned int	uniqueID;
-        
-        bool            isKeyOn;       // キーオンされているかどうか
-		
 		int				pb;
 		int				vibdepth;
 		bool			reg_pmod;
@@ -225,8 +213,7 @@ private:
 	std::list<MIDIEvt>	mDelayedEvt;		//遅延実行イベントのキュー
     //bool            mClearEvent;            //次のRenderでFIFOをクリアするフラグ
 	
-	std::list<int>	mPlayVo;				//ノートオン状態のボイス
-	std::list<int>	mWaitVo;				//ノートオフ状態のボイス
+    DynamicVoiceManager mDVoice;
 	
 	VoiceState		mVoice[kMaximumVoices];		//ボイスの状況
 	
@@ -259,10 +246,6 @@ private:
 	int		doNoteOff( const MIDIEvt *evt );
     bool doEvents1( const MIDIEvt *evt );
     bool doEvents2( const MIDIEvt *evt );
-	int		FindFreeVoice();
-    bool    IsPlayingVoice(int v);
-    int     StealVoice(int ch);
-    int     FindVoice(int ch=-1);
     int calcEventDelaySamples() { return ((mEventDelayClocks / CLOCKS_PER_SAMPLE) * mSampleRate) / INTERNAL_CLOCK; }
     float calcGM2PortamentCurve(int value);
 };
