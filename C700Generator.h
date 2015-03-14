@@ -10,18 +10,8 @@
 #pragma once
 
 #include "C700defines.h"
-#include "EchoKernel.h"
+#include "C700DSP.h"
 #include "DynamicVoiceManager.h"
-
-//-----------------------------------------------------------------------------
-typedef enum
-{
-    ATTACK,
-    DECAY,
-    SUSTAIN,
-    RELEASE,
-//	FASTRELEASE
-} env_state_t32;
 
 //-----------------------------------------------------------------------------
 typedef enum
@@ -52,6 +42,30 @@ public:
         unsigned int changeFlg;
         InstParams  changedVP;
     } ChannelStatus;
+    
+    typedef struct {
+		int				pb;
+		int				vibdepth;
+		bool			reg_pmod;
+		float			vibPhase;
+        float           portaPitch;
+		
+		int				ar,dr,sl,sr,vol_l,vol_r;    // ミラー
+		
+		int				velo;
+        int             volume;
+        int             expression;
+        int             pan;
+        unsigned char	*brrdata;    // ミラー
+		unsigned int	loopPoint;    // ミラー
+		bool			loop;    // ミラー
+        
+		bool			echoOn;    // ミラー
+        
+        int				pitch;    // ミラー
+        
+        void Reset();
+	} VoiceStatus;
     
 	C700Generator();
 	virtual				~C700Generator() {}
@@ -162,76 +176,33 @@ private:
 		int				remain_samples;
 	} MIDIEvt;
 	
-	struct VoiceState {
-		int				pb;
-		int				vibdepth;
-		bool			reg_pmod;
-		float			vibPhase;
-        float           portaPitch;
-		
-		int				ar,dr,sl,sr,vol_l,vol_r;
-		
-		int				velo;
-        int             volume;
-        int             expression;
-        int             pan;
-		unsigned int	loopPoint;
-		bool			loop;
-        
-		bool			echoOn;
-		
-
-        // 音源内部状態
-		unsigned char	*brrdata;
-		int				memPtr;        /* Sample data memory pointer   */
-		int             end;            /* End or loop after block      */
-		int             envcnt;         /* Counts to envelope update    */
-		env_state_t32   envstate;       /* Current envelope state       */
-		int             envx;           /* Last env height (0-0x7FFF)   */
-		int             filter;         /* Last header's filter         */
-		int             half;           /* Active nybble of BRR         */
-		int             headerCnt;     /* Bytes before new header (0-8)*/
-		int             mixfrac;        /* Fractional part of smpl pstn */	//サンプル間を4096分割した位置
-		int				pitch;          /* Sample pitch (4096->32000Hz) */
-		int             range;          /* Last header's range          */
-		int             sampptr;        /* Where in sampbuf we are      */
-		int				smp1;           /* Last sample (for BRR filter) */
-		int				smp2;           /* Second-to-last sample decoded*/
-		int				sampbuf[4];   /* Buffer for Gaussian interp   */
-
-		void Reset();
-	};
-	
 	double			mSampleRate;
 	
 	int				mProcessFrac;
 	int				mProcessbuf[2][16];		//リサンプリング用バッファ
 	int				mProcessbufPtr;			//リサンプリング用バッファ書き込み位置
-	EchoKernel		mEcho[2];
 	
 	std::list<MIDIEvt>	mMIDIEvt;			//受け取ったイベントのキュー
 	std::list<MIDIEvt>	mDelayedEvt;		//遅延実行イベントのキュー
     //bool            mClearEvent;            //次のRenderでFIFOをクリアするフラグ
 	
     DynamicVoiceManager mDVoice;
-	
-	VoiceState		mVoice[kMaximumVoices];		//ボイスの状況
-	
-	int				mVoiceLimit;
-	int				mMainVolume_L;
-	int				mMainVolume_R;
-	float			mVibfreq;
-	float			mVibdepth;
-	bool			mNewADPCM;
+	    
 	bool			mDrumMode[NUM_BANKS];
 	velocity_mode	mVelocityMode;
     ChannelStatus   mChStat[16];
+    float			mVibfreq;
+	float			mVibdepth;
+
     int             mPortamentCount;        // DSP処理が1サンプル出力される毎にカウントされ、ポルタメント処理されるとPORTAMENT_CYCLE_SAMPLES 減らす
     int             mEventDelaySamples;     // 動作遅延サンプル(処理サンプリングレート)
     int             mEventDelayClocks;      // 動作遅延クロック
 	
 	int				mKeyMap[NUM_BANKS][128];	//各キーに対応するプログラムNo.
 	InstParams		*mVPset;
+    
+    C700DSP         mDSP;
+    VoiceStatus		mVoiceStat[kMaximumVoices];
 	
     InstParams getChannelVP(int ch, int note);
     void processPortament(int vo);

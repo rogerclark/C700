@@ -10,29 +10,10 @@
 #include "C700defines.h"
 #include "C700Generator.h"
 #include <math.h>
-#include "gauss.h"
-
-#define filter1(a1)	(( a1 >> 1 ) + ( ( -a1 ) >> 5 ))
-#define filter2(a1,a2)	(a1 + ( ( -( a1 + ( a1 >> 1 ) ) ) >> 5 ) - ( a2 >> 1 ) + ( a2 >> 5 ))
-#define filter3(a1,a2)	(a1  + ( ( -( a1 + ( a1 << 2 ) + ( a1 << 3 ) ) ) >> 7 )  - ( a2 >> 1 )  + ( ( a2 + ( a2 >> 1 ) ) >> 4 ))
 
 const float onepi = 3.14159265358979;
 
 #define ANALOG_PORTAMENTO 0
-
-static const int	*G1 = &gauss[256];
-static const int	*G2 = &gauss[512];
-static const int	*G3 = &gauss[255];
-static const int	*G4 = &gauss[0];
-
-static const int	CNT_INIT = 0x7800;
-static const int	ENVCNT[32]
-= {
-    0x0000, 0x000F, 0x0014, 0x0018, 0x001E, 0x0028, 0x0030, 0x003C,
-    0x0050, 0x0060, 0x0078, 0x00A0, 0x00C0, 0x00F0, 0x0140, 0x0180,
-    0x01E0, 0x0280, 0x0300, 0x03C0, 0x0500, 0x0600, 0x0780, 0x0A00,
-    0x0C00, 0x0F00, 0x1400, 0x1800, 0x1E00, 0x2800, 0x3C00, 0x7800
-};
 
 static const int	VOLUME_CURB[128]
 = {
@@ -73,14 +54,24 @@ static const int sinctable[] = {
 	0,-8,31,0,-462,1911,-4438,7057,32767,7057,-4438,1911,-462,0,31,-8
 };
 
-static unsigned char silence_brr[] = {
-	0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-};
+//-----------------------------------------------------------------------------
+void C700Generator::VoiceStatus::Reset()
+{
+	pb = 0;
+	reg_pmod = 0;
+	vibdepth = 0;
+	vibPhase = 0.0f;
+    portaPitch = .0f;
+    pan = 64;
+	
+	loopPoint = 0;
+	loop = false;
+	pitch = 0;
+}
 
 //-----------------------------------------------------------------------------
 C700Generator::C700Generator()
 : mSampleRate(44100.0),
-  mNewADPCM( false ),
   mVelocityMode( kVelocityMode_Square ),
   mVPset(NULL)
 {
@@ -93,10 +84,9 @@ C700Generator::C700Generator()
 		}
 	}
 	//Initialize
-	mMainVolume_L = 127;
-	mMainVolume_R = 127;
-	mVibfreq = 0.00137445;
+    mVibfreq = 0.00137445;
 	mVibdepth = 0.5;
+
     mEventDelayClocks = 8192;   // 8ms
     mEventDelaySamples = calcEventDelaySamples();
     
@@ -119,38 +109,6 @@ C700Generator::C700Generator()
 	}
     mDVoice.Initialize(8);
 	Reset();
-}
-
-//-----------------------------------------------------------------------------
-void C700Generator::VoiceState::Reset()
-{
-	smp1=0;
-	smp2=0;
-	sampbuf[0]=0;
-	sampbuf[1]=0;
-	sampbuf[2]=0;
-	sampbuf[3]=0;
-	
-	pb = 0;
-	reg_pmod = 0;
-	vibdepth = 0;
-	vibPhase = 0.0f;
-    portaPitch = .0f;
-    pan = 64;
-	
-	brrdata = silence_brr;
-	loopPoint = 0;
-	loop = false;
-	pitch = 0;
-	memPtr = 0;
-	headerCnt = 0;
-	half = 0;
-	envx = 0;
-	end = 0;
-	sampptr = 0;
-	mixfrac=0;
-	envcnt = CNT_INIT;
-	envstate = RELEASE;	
 }
 
 //-----------------------------------------------------------------------------
@@ -215,7 +173,8 @@ void C700Generator::AllNotesOff()
     // TODO: mPlayVo, mWaitVoをなぜクリアしていないのか調べる
     //mClearEvent = true;
 	for ( int i=0; i<kMaximumVoices; i++ ) {
-		mVoice[i].Reset();
+		mDSP.ResetVoice(i);
+        mVoiceStat[i].Reset();
 	}
     mDVoice.Reset();
 }
@@ -224,8 +183,7 @@ void C700Generator::AllNotesOff()
 void C700Generator::AllSoundOff()
 {
     AllNotesOff();
-	mEcho[0].Reset();
-	mEcho[1].Reset();	
+	mDSP.ResetEcho();
 }
 
 //-----------------------------------------------------------------------------
@@ -302,7 +260,7 @@ void C700Generator::doPitchBend( int ch, int value1, int value2 )
     mChStat[ch].pitchBend = pb_value;
 	for ( int i=0; i<kMaximumVoices; i++ ) {
 		if ( mDVoice.GetVoiceMidiCh(i) == ch ) {
-			mVoice[i].pb = CalcPBValue( ch, pb_value, mVoice[i].pitch );
+			mVoiceStat[i].pb = CalcPBValue( ch, pb_value, mVoiceStat[i].pitch );
 		}
 	}
 }
@@ -313,8 +271,8 @@ void C700Generator::ModWheel( int ch, int value )
     mChStat[ch].vibDepth = value;
 	for ( int i=0; i<kMaximumVoices; i++ ) {
 		if ( mDVoice.GetVoiceMidiCh(i) == ch ) {
-			mVoice[i].vibdepth = value;
-			mVoice[i].reg_pmod = value > 0 ? true:false;
+			mVoiceStat[i].vibdepth = value;
+			mVoiceStat[i].reg_pmod = value > 0 ? true:false;
 		}
 	}
 }
@@ -329,7 +287,7 @@ void C700Generator::Damper( int ch, bool on )
 void C700Generator::SetVoiceLimit( int value )
 {
 	mDVoice.ChangeVoiceLimit(value);
-	mVoiceLimit = value;
+    mDSP.SetVoiceLimit(value);
 }
 
 //-----------------------------------------------------------------------------
@@ -348,7 +306,7 @@ void C700Generator::SetPBRange( int ch, float value )
 //-----------------------------------------------------------------------------
 void C700Generator::SetADPCMMode( bool value )
 {
-	mNewADPCM = value;
+    mDSP.SetNewADPCM(value);
 }
 
 //-----------------------------------------------------------------------------
@@ -384,46 +342,43 @@ void C700Generator::SetVibDepth( int ch, float value )
 //-----------------------------------------------------------------------------
 void C700Generator::SetMainVol_L( int value )
 {
-	mMainVolume_L = value;
+    mDSP.SetMainVolumeL(value);
 }
 
 //-----------------------------------------------------------------------------
 void C700Generator::SetMainVol_R( int value )
 {
-	mMainVolume_R = value;
+    mDSP.SetMainVolumeR(value);
 }
 
 //-----------------------------------------------------------------------------
 void C700Generator::SetEchoVol_L( int value )
 {
-	mEcho[0].SetEchoVol( value );
+    mDSP.SetEchoVol_L(value);
 }
 
 //-----------------------------------------------------------------------------
 void C700Generator::SetEchoVol_R( int value )
 {
-	mEcho[1].SetEchoVol( value );
+    mDSP.SetEchoVol_R(value);
 }
 
 //-----------------------------------------------------------------------------
 void C700Generator::SetFeedBackLevel( int value )
 {
-	mEcho[0].SetFBLevel( value );
-	mEcho[1].SetFBLevel( value );
+    mDSP.SetFeedBackLevel(value);
 }
 
 //-----------------------------------------------------------------------------
 void C700Generator::SetDelayTime( int value )
 {
-	mEcho[0].SetDelayTime( value );
-	mEcho[1].SetDelayTime( value );
+    mDSP.SetDelayTime(value);
 }
 
 //-----------------------------------------------------------------------------
 void C700Generator::SetFIRTap( int tap, int value )
 {
-	mEcho[0].SetFIRTap(tap, value);
-	mEcho[1].SetFIRTap(tap, value);
+    mDSP.SetFIRTap(tap, value);
 }
 
 //-----------------------------------------------------------------------------
@@ -556,7 +511,7 @@ void C700Generator::Volume( int ch, int value )
     // 発音中のボイスに反映
     for (int i=0; i<kMaximumVoices; i++) {
         if (mDVoice.GetVoiceMidiCh(i) == ch) {
-            mVoice[i].volume = mChStat[ch].volume;
+            mVoiceStat[i].volume = mChStat[ch].volume;
         }
     }
 }
@@ -568,7 +523,7 @@ void C700Generator::Expression( int ch, int value )
     // 発音中のボイスに反映
     for (int i=0; i<kMaximumVoices; i++) {
         if (mDVoice.GetVoiceMidiCh(i) == ch) {
-            mVoice[i].expression = mChStat[ch].expression;
+            mVoiceStat[i].expression = mChStat[ch].expression;
         }
     }
 }
@@ -580,7 +535,7 @@ void C700Generator::Panpot( int ch, int value )
     // 発音中のボイスに反映
     for (int i=0; i<kMaximumVoices; i++) {
         if (mDVoice.GetVoiceMidiCh(i) == ch) {
-            mVoice[i].pan = mChStat[ch].pan;
+            mVoiceStat[i].pan = mChStat[ch].pan;
         }
     }
 }
@@ -621,7 +576,7 @@ void C700Generator::ChangeChAR(int ch, int ar)
     // 発音中のボイスに反映
     for (int i=0; i<kMaximumVoices; i++) {
         if (mDVoice.GetVoiceMidiCh(i) == ch) {
-            mVoice[i].ar = mChStat[ch].changedVP.ar;
+            mVoiceStat[i].ar = mChStat[ch].changedVP.ar;
         }
     }
 }
@@ -634,7 +589,7 @@ void C700Generator::ChangeChDR(int ch, int dr)
     // 発音中のボイスに反映
     for (int i=0; i<kMaximumVoices; i++) {
         if (mDVoice.GetVoiceMidiCh(i) == ch) {
-            mVoice[i].dr = mChStat[ch].changedVP.dr;
+            mVoiceStat[i].dr = mChStat[ch].changedVP.dr;
         }
     }
 }
@@ -647,7 +602,7 @@ void C700Generator::ChangeChSL(int ch, int sl)
     // 発音中のボイスに反映
     for (int i=0; i<kMaximumVoices; i++) {
         if (mDVoice.GetVoiceMidiCh(i) == ch) {
-            mVoice[i].sl = mChStat[ch].changedVP.sl;
+            mVoiceStat[i].sl = mChStat[ch].changedVP.sl;
         }
     }
 }
@@ -660,7 +615,7 @@ void C700Generator::ChangeChSR(int ch, int sr)
     // 発音中のボイスに反映
     for (int i=0; i<kMaximumVoices; i++) {
         if (mDVoice.GetVoiceMidiCh(i) == ch) {
-            mVoice[i].sr = mChStat[ch].changedVP.sr;
+            mVoiceStat[i].sr = mChStat[ch].changedVP.sr;
         }
     }
 }
@@ -673,7 +628,7 @@ void C700Generator::ChangeChVolL(int ch, int voll)
     // 発音中のボイスに反映
     for (int i=0; i<kMaximumVoices; i++) {
         if (mDVoice.GetVoiceMidiCh(i) == ch) {
-            mVoice[i].vol_l = mChStat[ch].changedVP.volL;
+            mVoiceStat[i].vol_l = mChStat[ch].changedVP.volL;
         }
     }
 }
@@ -686,7 +641,7 @@ void C700Generator::ChangeChVolR(int ch, int volr)
     // 発音中のボイスに反映
     for (int i=0; i<kMaximumVoices; i++) {
         if (mDVoice.GetVoiceMidiCh(i) == ch) {
-            mVoice[i].vol_r = mChStat[ch].changedVP.volR;
+            mVoiceStat[i].vol_r = mChStat[ch].changedVP.volR;
         }
     }
 }
@@ -699,7 +654,7 @@ void C700Generator::ChangeChEcho(int ch, int echo)
     // 発音中のボイスに反映
     for (int i=0; i<kMaximumVoices; i++) {
         if (mDVoice.GetVoiceMidiCh(i) == ch) {
-            mVoice[i].echoOn = mChStat[ch].changedVP.echo;
+            mVoiceStat[i].echoOn = mChStat[ch].changedVP.echo;
         }
     }
 }
@@ -740,22 +695,22 @@ void C700Generator::processPortament(int vo)
     newPitch = mVoice[vo].pitch * tcInv + mVoice[vo].portaPitch * tc;
     mVoice[vo].portaPitch = newPitch;
 #else
-    if ( mVoice[vo].pitch > mVoice[vo].portaPitch) {
-        newPitch = mVoice[vo].portaPitch * mChStat[ mDVoice.GetVoiceMidiCh(vo) ].portaTc;
-        if (newPitch > mVoice[vo].pitch) {
-            newPitch = mVoice[vo].pitch;
+    if ( mVoiceStat[vo].pitch > mVoiceStat[vo].portaPitch) {
+        newPitch = mVoiceStat[vo].portaPitch * mChStat[ mDVoice.GetVoiceMidiCh(vo) ].portaTc;
+        if (newPitch > mVoiceStat[vo].pitch) {
+            newPitch = mVoiceStat[vo].pitch;
         }
-        mVoice[vo].portaPitch = newPitch;
+        mVoiceStat[vo].portaPitch = newPitch;
     }
-    else if ( mVoice[vo].pitch < mVoice[vo].portaPitch) {
-        newPitch = mVoice[vo].portaPitch / mChStat[ mDVoice.GetVoiceMidiCh(vo) ].portaTc;
-        if (newPitch < mVoice[vo].pitch) {
-            newPitch = mVoice[vo].pitch;
+    else if ( mVoiceStat[vo].pitch < mVoiceStat[vo].portaPitch) {
+        newPitch = mVoiceStat[vo].portaPitch / mChStat[ mDVoice.GetVoiceMidiCh(vo) ].portaTc;
+        if (newPitch < mVoiceStat[vo].pitch) {
+            newPitch = mVoiceStat[vo].pitch;
         }
-        mVoice[vo].portaPitch = newPitch;
+        mVoiceStat[vo].portaPitch = newPitch;
     }
 #endif
-    mChStat[ mDVoice.GetVoiceMidiCh(vo) ].portaStartPitch = mVoice[vo].portaPitch;
+    mChStat[ mDVoice.GetVoiceMidiCh(vo) ].portaStartPitch = mVoiceStat[vo].portaPitch;
 }
 
 //-----------------------------------------------------------------------------
@@ -778,7 +733,7 @@ bool C700Generator::doNoteOn1( MIDIEvt dEvt )
         
         if (v != -1) {
             if (legato == false) {
-                mVoice[v].envstate = RELEASE;
+                mDSP.KeyOffVoice(v);
             }
             // 上位4bitにボイス番号を入れる
             dEvt.ch += v << 4;
@@ -813,16 +768,16 @@ void C700Generator::doNoteOn2(const MIDIEvt *evt)
     }
 	
 	// 中心周波数の算出
-	mVoice[v].pitch = pow(2., (note - vp.basekey) / 12.)/INTERNAL_CLOCK*vp.rate*4096 + 0.5;
+	mVoiceStat[v].pitch = pow(2., (note - vp.basekey) / 12.)/INTERNAL_CLOCK*vp.rate*4096 + 0.5;
     
     if (vp.portamentoOn) {
         if (mChStat[midiCh].portaStartPitch == 0) {
-            mChStat[midiCh].portaStartPitch = mVoice[v].pitch;
+            mChStat[midiCh].portaStartPitch = mVoiceStat[v].pitch;
         }
-        mVoice[v].portaPitch = mChStat[midiCh].portaStartPitch;
+        mVoiceStat[v].portaPitch = mChStat[midiCh].portaStartPitch;
     }
     else {
-        mVoice[v].portaPitch = mVoice[v].pitch;
+        mVoiceStat[v].portaPitch = mVoiceStat[v].pitch;
     }
     
     mDVoice.SetKeyOn(v);
@@ -830,52 +785,46 @@ void C700Generator::doNoteOn2(const MIDIEvt *evt)
     if ((evt->note & 0x80) == 0) {
         //ベロシティの取得
         if ( mVelocityMode == kVelocityMode_Square ) {
-            mVoice[v].velo = VOLUME_CURB[evt->velo];
+            mVoiceStat[v].velo = VOLUME_CURB[evt->velo];
         }
         else if ( mVelocityMode == kVelocityMode_Linear ) {
-            mVoice[v].velo = evt->velo << 4;
+            mVoiceStat[v].velo = evt->velo << 4;
         }
         else {
-            mVoice[v].velo=VOLUME_CURB[127];
+            mVoiceStat[v].velo=VOLUME_CURB[127];
         }
         
-        mVoice[v].volume = mChStat[midiCh].volume;
-        mVoice[v].expression = mChStat[midiCh].expression;
-        mVoice[v].pan = mChStat[midiCh].pan;
+        mVoiceStat[v].volume = mChStat[midiCh].volume;
+        mVoiceStat[v].expression = mChStat[midiCh].expression;
+        mVoiceStat[v].pan = mChStat[midiCh].pan;
         
-        mVoice[v].brrdata = vp.brr.data;
-        mVoice[v].loopPoint = vp.lp;
-        mVoice[v].loop = vp.loop;
-        mVoice[v].echoOn = vp.echo;
+        mVoiceStat[v].brrdata = vp.brr.data;
+        mVoiceStat[v].loopPoint = vp.lp;
+        mVoiceStat[v].loop = vp.loop;
+        mVoiceStat[v].echoOn = vp.echo;
         
-        mVoice[v].pb = CalcPBValue( midiCh, mChStat[midiCh].pitchBend, mVoice[v].pitch );
-        mVoice[v].vibdepth = mChStat[midiCh].vibDepth;
+        mVoiceStat[v].pb = CalcPBValue( midiCh, mChStat[midiCh].pitchBend, mVoiceStat[v].pitch );
+        mVoiceStat[v].vibdepth = mChStat[midiCh].vibDepth;
         
-        mVoice[v].reg_pmod = mVoice[v].vibdepth>0 ? true:false;
-        mVoice[v].vibPhase = 0.0f;
+        mVoiceStat[v].reg_pmod = mVoiceStat[v].vibdepth>0 ? true:false;
+        mVoiceStat[v].vibPhase = 0.0f;
         
-        mVoice[v].vol_l=vp.volL;
-        mVoice[v].vol_r=vp.volR;
-        mVoice[v].ar=vp.ar;
-        mVoice[v].dr=vp.dr;
-        mVoice[v].sl=vp.sl;
+        mVoiceStat[v].vol_l=vp.volL;
+        mVoiceStat[v].vol_r=vp.volR;
+        mVoiceStat[v].ar=vp.ar;
+        mVoiceStat[v].dr=vp.dr;
+        mVoiceStat[v].sl=vp.sl;
         if (vp.sustainMode) {
-            mVoice[v].sr=0;		//ノートオフ時に設定値になる
+            mVoiceStat[v].sr=0;		//ノートオフ時に設定値になる
         }
         else {
-            mVoice[v].sr=vp.sr;
+            mVoiceStat[v].sr=vp.sr;
         }
+        
+        // TODO: ノートオンに必要なパラメータをDSPに反映
         
         // キーオン
-        mVoice[v].memPtr = 0;
-        mVoice[v].headerCnt = 0;
-        mVoice[v].half = 0;
-        mVoice[v].envx = 0;
-        mVoice[v].end = 0;
-        mVoice[v].sampptr = 0;
-        mVoice[v].mixfrac = 3 * 4096;
-        mVoice[v].envcnt = CNT_INIT;
-        mVoice[v].envstate = ATTACK;
+        mDSP.KeyOnVoice(v);
         
         // 最後に発音したノート番号を保存
         mChStat[midiCh].lastNote = note;
@@ -896,12 +845,12 @@ int C700Generator::doNoteOff( const MIDIEvt *evt )
     if (stops > 0) {
         if (vp.sustainMode) {
             //キーオフさせずにsrを変更する
-            mVoice[vo].dr = 7;
-            mVoice[vo].sr = vp.sr;
+            mDSP.SetDR(vo, 7);
+            mDSP.SetSR(vo, vp.sr);
         }
         else {
             // キーオフ
-            mVoice[vo].envstate = RELEASE;
+            mDSP.KeyOffVoice(vo);
         }
     }
 	return stops;
