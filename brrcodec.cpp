@@ -9,6 +9,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <algorithm>
+
 #include "brrcodec.h"
 
 int IntAbs( int value ) { return value < 0 ? -value : value; }
@@ -518,8 +520,8 @@ int emphasis(short *data, unsigned int length)
 		buf[i] = now*1.72713771313805 - a1*0.63418337904287769 - a2*0.10054429474861125;	//平滑フィルタの逆スペクトルのLPC係数より
 		a2=a1;
 		a1=buf[i];
-		if (max < abs(buf[i]))
-			max=abs(buf[i]);
+		if (max < std::abs(buf[i]))
+			max = std::abs(buf[i]);
 	}
 	if (max > 32767) {
 		for (i=0; i<length; i++)
